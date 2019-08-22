@@ -1,0 +1,14 @@
+yum install mysql
+aws s3 cp s3://my-bucket-mikes/db.ini ./
+
+mysql -h database-2.c20drn9zcxch.us-east-1.rds.amazonaws.com -P 3306 -u admin -p
+
+psql -h ec2-xxx-xx-xxx-xxx.compute-1.amazonaws.com -d <database_name> -U <username>
+
+Static dynamic Web Hosting
+https://aws.amazon.com/blogs/networking-and-content-delivery/dynamic-whole-site-delivery-with-amazon-cloudfront/
+NACL Recommendation
+https://docs.aws.amazon.com/vpc/latest/userguide/vpc-recommended-nacl-rules.html
+
+Doc DB
+https://docs.aws.amazon.com/documentdb/latest/developerguide/getting-started.connect.html

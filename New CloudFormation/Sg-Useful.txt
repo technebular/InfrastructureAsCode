@@ -1,0 +1,51 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Network Template'
+
+Parameters: 
+  NetworkModule:
+    Description: 'Stack name of Network module.'
+    Type: String
+    Default: 'vpc-2azs'
+
+Resources:
+
+  DirectConnectSecurityGroupRDP:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: !Sub '${AWS::StackName}-DirectConnectAccess-RDP'
+      VpcId:
+        'Fn::ImportValue': !Sub '${NetworkModule}-VpcId'
+      Tags:
+      - Key: Name
+        Value: 'DirectConnectAccess-RDP'
+
+  DirectConnectSecurityGroupIngressRDPFromDX1:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      GroupId: !Ref DirectConnectSecurityGroupRDP
+      IpProtocol: tcp
+      FromPort: 3389
+      ToPort: 3389
+      CidrIp: '10.249.160.0/24'
+      Description: 'Admin: RDP via Direct Connect'
+
+  DirectConnectSecurityGroupIngressRDPFromDX2:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      GroupId: !Ref DirectConnectSecurityGroupRDP
+      IpProtocol: tcp
+      FromPort: 3389
+      ToPort: 3389
+      CidrIp: '10.249.161.0/24'
+      Description: 'Admin: RDP via Direct Connect'
+  
+  DirectConnectSecurityGroupIngressRDPFromDX3:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      GroupId: !Ref DirectConnectSecurityGroupRDP
+      IpProtocol: tcp
+      FromPort: 3389
+      ToPort: 3389
+      CidrIp: '10.249.60.0/24'
+      Description: 'Admin: RDP via Direct Connect'

@@ -1,0 +1,69 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'WAFTemplate'
+
+Parameters: 
+ NetworkModule:
+  Description: 'Stack name of  Network module.'
+  Type: String
+  Default: 'Network'
+#  BucketModule:
+#   Description: 'Stack name of  S3 Buckets module.'
+#   Type: String
+#   Default: 'buckets'
+ ALBModule:
+  Description: 'Stack name of  EC2 module.'
+  Type: String
+  Default: 'Network'
+#  ACloudfrontModule:
+#   Description: 'Stack name of  EC2 module.'
+#   Type: String
+#   Default: 'cloudfront-s3-origin'
+
+Resources:
+
+
+  MyIPSetBlacklist: 
+    Type: 'AWS::WAFRegional::IPSet'
+    Properties: 
+      Name: 'IPSet for blacklisted IP adresses'
+      IPSetDescriptors: 
+        - 
+          Type: 'IPV4'
+          Value: '192.0.2.44/32'
+        - 
+          Type: 'IPV4'
+          Value: '192.0.7.0/24'
+
+  MyIPSetRule: 
+
+    Type: 'AWS::WAFRegional::Rule'
+    Properties: 
+      Name: 'MyIPSetRule'
+      MetricName: 'MyIPSetRule'
+      Predicates: 
+        - 
+          DataId: 
+            Ref: 'MyIPSetBlacklist'
+          Negated: false
+          Type: 'IPMatch'
+
+  MyWebACL: 
+    Type: AWS::WAFRegional::WebACL
+    Properties: 
+      Name: 'WebACL to block blacklisted IP addresses'
+      DefaultAction: 
+        Type: 'ALLOW'
+      MetricName: 'MyWebACL'
+      Rules: 
+        - 
+          Action: 
+            Type: 'BLOCK'
+          Priority: 1
+          RuleId: !Ref 'MyIPSetRule'
+
+  MyWebACLAssociation:
+    Type: AWS::WAFRegional::WebACLAssociation
+    Properties:
+      ResourceArn: 'arn:aws:elasticloadbalancing:ap-southeast-2:345497999521:loadbalancer/app/Network-Alb/420d608b17ff69e7'
+      WebACLId: !Ref MyWebACL

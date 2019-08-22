@@ -1,0 +1,91 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'WAFTemplate'
+
+Parameters:
+ NetworkModule:
+  Description: 'Secure-NetworkModel'
+  Type: String
+  Default: 'Network'
+ ALBModule:
+  Description: 'Secure-NetworkModel'
+  Type: String
+  Default: 'Network'
+
+
+Resources:
+  # 1. cfn-modules: WAF
+
+  SqlInjDetection:
+    Type: AWS::WAFRegional::SqlInjectionMatchSet
+    Properties:
+      Name: 'Find SQL injections in the query string'
+
+      SqlInjectionMatchTuples:
+        - FieldToMatch:
+            Type: QUERY_STRING
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: BODY
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: BODY
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: URI
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: URI
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: HEADER
+            Data: Cookie
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: HEADER
+            Data: Cookie
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: HEADER
+            Data: Authorization
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: HEADER
+            Data: Authorization
+          TextTransformation: HTML_ENTITY_DECODE
+
+  SqlInjRule:
+    Type: 'AWS::WAFRegional::Rule'
+    Properties:
+      Name: 'SqlInjRule'
+      MetricName: 'SqlInjRule'
+      Predicates:
+        -
+          DataId:
+            Ref: SqlInjDetection
+          Negated: false
+          Type: 'SqlInjectionMatch'
+
+  SqlInjWebACL:
+    Type: 'AWS::WAFRegional::WebACL'
+    Properties:
+      Name: 'Web ACL to block SQL injection in the query string'
+      DefaultAction:
+        Type: 'ALLOW'
+      MetricName: 'SqlInjWebACL'
+      Rules:
+        -
+          Action:
+            Type: 'BLOCK'
+          Priority: 1
+          RuleId: !Ref 'SqlInjRule'
+
+  MyWebACLAssociation:
+    Type: 'AWS::WAFRegional::WebACLAssociation'
+    Properties:
+       #ResourceArn: !Ref ALBModule.Id
+      ResourceArn: 'arn:aws:elasticloadbalancing:us-east-1:470106932009:loadbalancer/app/Network-Alb/7b8c5517b81ae38f'
+      WebACLId:  !Ref SqlInjWebACL

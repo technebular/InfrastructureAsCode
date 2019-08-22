@@ -1,0 +1,68 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'WAFTemplate'
+
+Parameters:
+ NetworkModule:
+  Description: 'Secure-NetworkModel'
+  Type: String
+  Default: 'Network'
+ ALBModule:
+  Description: 'Secure-NetworkModel'
+  Type: String
+  Default: 'Network'
+
+Resources:
+  # 1. cfn-modules: WAF
+
+  # Define Geographic Constraints
+  MyGeoConstraints:
+    Type: 'AWS::WAFRegional::GeoMatchSet'
+    Properties:
+      Name: 'GeoMatchSet for restricted countries'
+    #  GeoMatchConstraints:
+    #    -
+    #       Type: 'Country'
+    #       Value: 'NZ'
+      GeoMatchConstraints:
+      -
+        Type: 'Country'
+        Value: 'US'
+
+        Type: 'Country'
+        Value: 'RO'
+  MyGeoMatchRule:
+    Type: 'AWS::WAFRegional::Rule'
+    Properties:
+      Name: 'MyGeoMatchRule'
+      MetricName: 'MyGeoMatchRule'
+      Predicates:
+         -
+          DataId: !Ref 'MyGeoConstraints'
+          Negated: false
+          Type: 'GeoMatch'
+
+
+#Associate a GeoMatchSet with a Web ACL Rule
+
+#This associates the MyGeoMatchRule rule with a web ACL.
+#The web ACL allows requests that originate from all countries except for those that are defined in the MyGeoMatchRule.
+  WebAclGeoRule:
+    Type: 'AWS::WAFRegional::WebACL'
+    Properties:
+      Name: 'WebAclGeoRule to block restricted countries'
+      DefaultAction:
+        Type: 'ALLOW'
+      MetricName: 'WebAclGeoRule'
+      Rules:
+        -
+          Action:
+            Type: 'BLOCK'
+          Priority: 1
+          RuleId: !Ref 'MyGeoMatchRule'
+  MyWebACLAssociation:
+    Type: 'AWS::WAFRegional::WebACLAssociation'
+    Properties:
+      #ResourceArn: !Ref ALBModule.Id
+      ResourceArn: 'arn:aws:elasticloadbalancing:us-east-1:470106932009:loadbalancer/app/Network-Alb/7b8c5517b81ae38f'
+      WebACLId:    !Ref WebAclGeoRule
